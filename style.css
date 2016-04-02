@@ -1,0 +1,57 @@
+body {
+    background-color: #EEEEEE;
+}
+
+.display, .control {
+	margin: 10px;
+}
+
+.display {
+	float: left;
+}
+
+.control {
+	float: left;
+}
+
+.control textarea {
+	margin: 10px;
+}
+
+svg {
+	border: 1px solid black;
+}
+
+.grass {
+	fill: #3CAB26;
+	stroke-width: 1px;
+	stroke: #2D801C;
+}
+
+.rock {
+	fill: #858585;
+	stroke-width: 1px;
+	stroke: #C7C7C7;
+}
+
+.lava {
+	fill: #B3210B;
+	stroke-width: 1px;
+	stroke: #FF6600;
+}
+
+.position {
+	fill: #C9EBF0;
+	stroke-width: 3px;
+	stroke: #2973F2;
+}
+
+.positionNumber {
+	fill: #0E1A9E;
+	text-anchor: middle;
+}
+
+.path {
+	stroke-width: 3px;
+	stroke: #2973F2;
+}
