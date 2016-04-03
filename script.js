@@ -4,6 +4,10 @@ $(function() {
   var gridSize = {x: 10, y: 10}
   var squareLength = 600 / gridSize.x;
   var circleRadius = 2;
+  var reproductionRate = .5;
+  var mortalityRate = .1
+  var maxPopulationPerCell = 20;
+  var maxIterations = 2;
 
   function getSvgSize(gridSize, squareLength) {
     var width = gridSize.x * squareLength;
@@ -19,7 +23,7 @@ $(function() {
             var type = "grass";
             var cell = { x:x, y:y , 
                         productivity: max_productivity*(Math.random()+min_productivity),
-                        population: 2 };
+                        population: 4 };
             map.grid[x][y] = cell;
             map.cells.push(cell);
         }
@@ -48,44 +52,48 @@ $(function() {
   }
 
   function drawAgents(groups, scales) {
-    var agents = [];
-    map.cells.forEach(function(cell) {
-      Array.prototype.push.apply(agents, 
-        Array.apply(null, Array(cell.population)).map(function() {return cell}))
-    })
     var circleData = groups.position.selectAll("circle").data(agents);
     circleData.exit().remove();
     var circles = circleData.enter().append("circle");
     var circleAttributes = circles
-             .attr("cx", function (d) { return scales.x(d.x + Math.random()); })
-             .attr("cy", function (d) { return scales.y(d.y + Math.random()); })
+             .attr("cx", function (d) { 
+                return scales.x(d.x + Math.random()); 
+              })
+             .attr("cy", function (d) { 
+                return scales.y(d.y + Math.random()); 
+              })
              .attr("r", function (d) { return circleRadius; })
+             .attr("visibility", function(d) {if(d.isDead) {return 'hidden'} else {return 'visible'}})
              .attr("class", "position");     
   }
 
-  function executeCommands(e) {
-    var current = start;
-    for(i = 0; i < content.length; i++) {
-      var next = getNext(map, current, content[i]);
-      switch(next.type) {
-        case "grass":
-          path.push(next);
-          current = next;
-          break;
-        case "rock":
-          // stay at the same place
-          break;
-        case "lava":
-          drawAgents(groups, scales);
-          alert("The mower turned into ashes, as predicted.", "Start again.");
-          $('#commands').val("");
-          drawAgents(groups, scales);
-          return;
-        default:
-          throw "Unexpected terrain type "+next.type;
+  function executeTimestep() {
+    var newAgents = []
+    agents.forEach(function(agent) {
+      if(Math.random() < reproductionRate && map.grid[agent.x][agent.y].population < maxPopulationPerCell) {
+        newAgents.push(agent);
+        map.grid[agent.x][agent.y].population += 1;
       }
-    }
+      if(Math.random() < mortalityRate) {
+        agent.isDead = true;
+        map.grid[agent.x][agent.y].population -= 1
+      }
+    })
+    Array.prototype.push.apply(agents, newAgents);
     drawAgents(groups, scales);
+    if(time >= maxIterations) {
+      clearInterval(loop);
+    }
+    time += 1;
+  }
+
+  function initializeAgents() {
+    map.cells.forEach(function(cell) {
+        for(var i = 0; i < Math.round(initialAgentsPerCell*Math.random()); i++) {
+          agents.push({x: cell.x, y: cell.y});    
+          cell.population += 1;      
+        }
+    })
   }
 
   var svgSize = getSvgSize(gridSize, squareLength);
@@ -102,10 +110,14 @@ $(function() {
   var groups = { path:svgContainer.append("g"),
                   position:svgContainer.append("g") };
 
-  $('#commands').on('input', executeCommands);
-
+  var initialAgentsPerCell = 3;
+  var agents = []
+  initializeAgents();
   drawAgents(groups, scales);
 
   $('#commands').focus();
+
+  time = 0;
+  var loop = setInterval(executeTimestep, 1000);
   
 });
