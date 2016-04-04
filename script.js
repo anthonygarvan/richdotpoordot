@@ -4,10 +4,11 @@ $(function() {
   var gridSize = {x: 10, y: 10}
   var squareLength = 600 / gridSize.x;
   var circleRadius = 2;
-  var reproductionRate = .5;
-  var mortalityRate = .1
   var maxPopulationPerCell = 20;
-  var maxIterations = 2;
+  var maxIterations = 100;
+  var reproductionCoefficient = .025;
+  var mortalityCoefficient = .01;
+  var newbornMigrationProb = 0.2;
 
   function getSvgSize(gridSize, squareLength) {
     var width = gridSize.x * squareLength;
@@ -54,24 +55,33 @@ $(function() {
   function drawAgents(groups, scales) {
     var circleData = groups.position.selectAll("circle").data(agents);
     circleData.exit().remove();
-    var circles = circleData.enter().append("circle");
-    var circleAttributes = circles
+    circleData.enter().append("circle")
              .attr("cx", function (d) { 
                 return scales.x(d.x + Math.random()); 
               })
              .attr("cy", function (d) { 
                 return scales.y(d.y + Math.random()); 
               })
-             .attr("r", function (d) { return circleRadius; })
-             .attr("visibility", function(d) {if(d.isDead) {return 'hidden'} else {return 'visible'}})
-             .attr("class", "position");     
+             .attr("r", function (d) { return circleRadius; });
+    circleData
+             .attr("class", function(d) {if(d.isDead) {return 'black'} else {return 'blue'}});     
   }
 
   function executeTimestep() {
     var newAgents = []
     agents.forEach(function(agent) {
-      if(Math.random() < reproductionRate && map.grid[agent.x][agent.y].population < maxPopulationPerCell) {
-        newAgents.push(agent);
+      reproductionRate = agent.income * reproductionCoefficient;
+      mortalityRate = mortalityCoefficient / agent.income;
+      if(!agent.isDead && Math.random() < reproductionRate) {
+        var newAgent = JSON.parse(JSON.stringify(agent));
+        if(Math.random() < newbornMigrationProb) {
+          newAgent.x += Math.round(2*(Math.random() - .5))  
+          newAgent.y += Math.round(2*(Math.random() - .5))
+        }
+        if(map.grid[newAgent.x] && map.grid[newAgent.x][newAgent.y] 
+          && map.grid[newAgent.x][newAgent.y].population < maxPopulationPerCell) {
+            newAgents.push(newAgent);
+        }
         map.grid[agent.x][agent.y].population += 1;
       }
       if(Math.random() < mortalityRate) {
@@ -90,7 +100,7 @@ $(function() {
   function initializeAgents() {
     map.cells.forEach(function(cell) {
         for(var i = 0; i < Math.round(initialAgentsPerCell*Math.random()); i++) {
-          agents.push({x: cell.x, y: cell.y});    
+          agents.push({x: cell.x, y: cell.y, income: 5*Math.random()});    
           cell.population += 1;      
         }
     })
@@ -111,13 +121,11 @@ $(function() {
                   position:svgContainer.append("g") };
 
   var initialAgentsPerCell = 3;
-  var agents = []
+  var agents = [];
   initializeAgents();
   drawAgents(groups, scales);
 
-  $('#commands').focus();
-
   time = 0;
-  var loop = setInterval(executeTimestep, 1000);
+  var loop = setInterval(executeTimestep, 100);
   
 });

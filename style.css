@@ -46,6 +46,18 @@ svg {
 	stroke: #2973F2;
 }
 
+.black {
+	fill: #000000;
+	stroke-width: 3px;
+	stroke: #000000;
+}
+
+.blue {
+	fill: #C9EBF0;
+	stroke-width: 3px;
+	stroke: #2973F2;	
+}
+
 .positionNumber {
 	fill: #0E1A9E;
 	text-anchor: middle;
