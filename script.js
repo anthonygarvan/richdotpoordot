@@ -2,7 +2,7 @@ $(function() {
   var min_productivity = 1;
   var max_productivity = 5;
   var gridSize = {x: 10, y: 10}
-  var squareLength = 600 / gridSize.x;
+  var squareLength = (window.innerHeight-20) / gridSize.y;
   var circleRadius = 2;
   var maxIterations = 500;
   var reproductionCoefficient = .025;
@@ -14,7 +14,7 @@ $(function() {
   function getSvgSize(gridSize, squareLength) {
     var width = gridSize.x * squareLength;
     var height = gridSize.y * squareLength;
-    return { width:width, height:height };
+    return { width: width, height: height };
   }
 
   function buildMap(gridSize, ratios) {
@@ -24,7 +24,7 @@ $(function() {
         for (y = 0; y < gridSize.y; y++) {
             var type = "grass";
             var cell = { x:x, y:y , 
-                        productivity: max_productivity*(Math.random()+min_productivity),
+                        productivity: (max_productivity - min_productivity)*(Math.random() + min_productivity),
                         population: 4 };
             map.grid[x][y] = cell;
             map.cells.push(cell);
