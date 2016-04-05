@@ -64,8 +64,11 @@ $(function() {
                 return scales.y(d.y + Math.random()); 
               });
     circleData
-             .attr("class", function(d) {if(d.isDead) {return 'black'} else {return 'blue'}})
-             .attr("r", function (d) { return Math.round(d.income); });
+             .attr("class", function(d) {
+                if(d.isDead) {return 'black'}
+                if(d.type === 'dove') {return 'blue'}
+                if(d.type === 'solo') {return 'red'}})
+             .attr("r", function (d) { return 2*Math.round(d.income); });
   }
 
   function executeTimestep() {
@@ -78,6 +81,9 @@ $(function() {
 
       if(!agent.isTerritorial) {
         agent.isTerritorial = Math.random() < mutationRate;
+        if(agent.isTerritorial) {
+          agent.type = 'solo'
+        }
       } else {
         var baseIncome = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population
         agent.income = baseIncome - defenseCost;
@@ -120,7 +126,7 @@ $(function() {
 
   function initializeAgents() {
     map.cells.forEach(function(cell) {
-        var agent = {x: cell.x, y: cell.y}
+        var agent = {x: cell.x, y: cell.y, type: 'dove'}
         agent.income = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population; 
         agents.push(agent);    
         cell.population += 1;      

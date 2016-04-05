@@ -48,14 +48,26 @@ svg {
 
 .black {
 	fill: #000000;
-	stroke-width: 3px;
+	stroke-width: 1px;
 	stroke: #000000;
 }
 
 .blue {
-	fill: #C9EBF0;
-	stroke-width: 3px;
+	fill: #2973F2;
+	stroke-width: 1px;
 	stroke: #2973F2;	
+}
+
+.red {
+	fill: #FF0000;
+	stroke-width: 1px;
+	stroke: #FF0000;	
+}
+
+.purple {
+	fill: #8A2BE2;
+	stroke-width: 1px;
+	stroke: #8A2BE2;
 }
 
 .positionNumber {
