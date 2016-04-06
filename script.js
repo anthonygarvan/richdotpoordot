@@ -1,15 +1,16 @@
 $(function() {
-  var min_productivity = 1;
   var max_productivity = 5;
   var gridSize = {x: 10, y: 10}
   var squareLength = (window.innerHeight-20) / gridSize.y;
-  var circleRadius = 2;
   var maxIterations = 500;
-  var reproductionCoefficient = .025;
-  var mortalityCoefficient = .01;
-  var newbornMigrationProb = 0.05;
-  var defenseCost = .1;
-  var mutationRate = 0.0025;
+  var reproductionCoefficient = .05; // 0.05
+  var mortalityCoefficient = .01; // 0.05
+  var defenseCost = .1; // 0.1
+  var mutationRate = 0.01; // 0.01
+  var costOfLaborToClient = 0.2; // 0.2
+  var patronReturn = 0.6; // 0.3
+  var clientCostForPatron = (patronReturn + costOfLaborToClient) / 2;
+
 
   function getSvgSize(gridSize, squareLength) {
     var width = gridSize.x * squareLength;
@@ -22,10 +23,9 @@ $(function() {
     for (x = 0; x < gridSize.x; x++) {
         map.grid[x] = [];
         for (y = 0; y < gridSize.y; y++) {
-            var type = "grass";
             var cell = { x:x, y:y , 
-                        productivity: (max_productivity - min_productivity)*(Math.random() + min_productivity),
-                        population: 4 };
+                        productivity: Math.ceil(max_productivity*Math.random()),
+                        population: 0};
             map.grid[x][y] = cell;
             map.cells.push(cell);
         }
@@ -50,7 +50,7 @@ $(function() {
              .attr("y", function (d) { return scales.y(d.y); })
              .attr("width", function (d) { return squareLength; })
              .attr("height", function (d) { return squareLength; })
-             .attr("fill", function(d) { return 'rgb(100,' + Math.round(20*d.productivity) + ',100)'});
+             .attr("fill", function(d) { return 'rgb(50,' + Math.round(30*d.productivity) + ',50)'});
   }
 
   function drawAgents(groups, scales) {
@@ -67,47 +67,94 @@ $(function() {
              .attr("class", function(d) {
                 if(d.isDead) {return 'black'}
                 if(d.type === 'dove') {return 'blue'}
-                if(d.type === 'solo') {return 'red'}})
-             .attr("r", function (d) { return 2*Math.round(d.income); });
+                if(d.type === 'solo') {return 'red'}
+                if(d.type === 'client') {return 'yellow'}
+                if(d.type === 'patron') {return 'purple'}})
+             .attr("r", function (d) { return 2*Math.round(Math.sqrt(d.income)); });
   }
 
   function executeTimestep() {
     var newAgents = []
 
-    agents.filter(function(a) { return !a.isDead }).forEach(function(agent) {
-      reproductionRate = agent.income * reproductionCoefficient;
-      mortalityRate = mortalityCoefficient / agent.income;
-      agent.income = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population;  
+    var livingAgents = agents.filter(function(a) { return !a.isDead });
+    var patrons = livingAgents.filter(function(a) {return (a.type === 'patron')});
+    var clients = livingAgents.filter(function(a) {return (a.type === 'client')});
 
-      if(!agent.isTerritorial) {
-        agent.isTerritorial = Math.random() < mutationRate;
-        if(agent.isTerritorial) {
-          agent.type = 'solo'
-        }
-      } else {
-        var baseIncome = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population
-        agent.income = baseIncome - defenseCost;
+    
+    patrons.forEach(function(patron) {patron.clientCount = 0})
+    clients.forEach(function(client) {client.patronCount = 0})
+    if(patrons.length > 0) {
+      clients.forEach(function(client) {
+        var patron = patrons[Math.floor(patrons.length * Math.random())]
+        patron.clientCount += 1
+        client.patronCount = 1;        
+      })      
+    }
+
+    livingAgents.forEach(function(agent) {
+      reproductionRate = agent.income * reproductionCoefficient;
+      mortalityRate = mortalityCoefficient * (map.grid[agent.x][agent.y].productivity / agent.income) ;
+
+      if(agent.type === 'dove') {
+        agent.income = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population;          
+      }
+
+      if(agent.type === 'solo') {
+        agent.income = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population -
+                        defenseCost;
+      }
+
+      if(agent.type === 'patron') {
+        agent.income = map.grid[agent.x][agent.y].productivity + 
+                      agent.clientCount*(patronReturn - clientCostForPatron) -
+                      defenseCost;
+      }
+
+      if(agent.type === 'client') {
+        agent.income = (map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population) +
+                          agent.patronCount*(clientCostForPatron - costOfLaborToClient);  
+      }
+
+      if(agent.isTerritorial) {
         if(map.grid[agent.x][agent.y].productivity > (1 + defenseCost)) {
           map.grid[agent.x][agent.y].isDefended = true;
         }
       }
 
-      if(Math.random() < reproductionRate) {
-        var newAgent = JSON.parse(JSON.stringify(agent));
-        if(Math.random() < newbornMigrationProb) {
-          newAgent.x = Math.round(gridSize.x*Math.random())  
-          newAgent.y = Math.round(gridSize.y*Math.random())
-        }
-        if(map.grid[newAgent.x] && map.grid[newAgent.x][newAgent.y] && 
-              map.grid[newAgent.x][newAgent.y].population < 
-              map.grid[newAgent.x][newAgent.y].productivity &&
-              !map.grid[newAgent.x][newAgent.y].isDefended) {
-            newAgents.push(newAgent);
-            map.grid[newAgent.x][newAgent.y].population += 1;
-        }
-      }
-      if(Math.random() < mortalityRate || 
+      if(Math.random() < reproductionRate || 
         (map.grid[agent.x][agent.y].isDefended && !agent.isTerritorial)) {
+        var newAgent = JSON.parse(JSON.stringify(agent));
+        var spotFound = false;
+        var attempts = 0;
+        
+        if(Math.random() < mutationRate) {
+          var types = ['dove', 'solo', 'client', 'patron'];
+          newAgent.type = types[Math.round((types.length - 0.5)*Math.random())]
+          newAgent.isTerritorial = (newAgent.type === 'solo' || newAgent.type === 'patron');
+        } 
+
+        while(!spotFound && attempts < 10) {
+            attempts += 1
+            newAgent.x = Math.floor(gridSize.x * Math.random())  
+            newAgent.y = Math.floor(gridSize.y * Math.random())
+            
+            if((map.grid[newAgent.x][newAgent.y].population < 
+                map.grid[newAgent.x][newAgent.y].productivity) &&
+                !map.grid[newAgent.x][newAgent.y].isDefended &&
+                !(newAgent.isTerritorial && (map.grid[newAgent.x][newAgent.y].productivity - 
+                  map.grid[newAgent.x][newAgent.y].population) <= 1)) {
+                spotFound = true;
+                map.grid[newAgent.x][newAgent.y].isDefended = newAgent.isTerritorial;
+                newAgents.push(newAgent);
+                map.grid[newAgent.x][newAgent.y].population += 1;
+            }
+          }  
+        }
+        
+
+      if(Math.random() < mortalityRate || 
+        (map.grid[agent.x][agent.y].isDefended && !agent.isTerritorial ||
+        agent.income < 1)) {
         agent.isDead = true;
         map.grid[agent.x][agent.y].population -= 1;
         if(map.grid[agent.x][agent.y].population === 0) {
@@ -127,9 +174,9 @@ $(function() {
   function initializeAgents() {
     map.cells.forEach(function(cell) {
         var agent = {x: cell.x, y: cell.y, type: 'dove'}
-        agent.income = map.grid[agent.x][agent.y].productivity / map.grid[agent.x][agent.y].population; 
+        agent.income = map.grid[agent.x][agent.y].productivity; 
         agents.push(agent);    
-        cell.population += 1;      
+        cell.population = 1;      
     })
   }
 

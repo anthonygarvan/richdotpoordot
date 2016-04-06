@@ -23,29 +23,6 @@ svg {
 	border: 1px solid black;
 }
 
-.grass {
-	fill: #3CAB26;
-	stroke-width: 1px;
-	stroke: #2D801C;
-}
-
-.rock {
-	fill: #858585;
-	stroke-width: 1px;
-	stroke: #C7C7C7;
-}
-
-.lava {
-	fill: #B3210B;
-	stroke-width: 1px;
-	stroke: #FF6600;
-}
-
-.position {
-	fill: #C9EBF0;
-	stroke-width: 3px;
-	stroke: #2973F2;
-}
 
 .black {
 	fill: #000000;
@@ -65,18 +42,14 @@ svg {
 	stroke: #FF0000;	
 }
 
-.purple {
-	fill: #8A2BE2;
+.yellow {
+	fill: #ffff00;
 	stroke-width: 1px;
-	stroke: #8A2BE2;
+	stroke: #ffff00;
 }
 
-.positionNumber {
-	fill: #0E1A9E;
-	text-anchor: middle;
-}
-
-.path {
-	stroke-width: 3px;
-	stroke: #2973F2;
+.purple {
+	fill: #EE82EE;
+	stroke-width: 1px;
+	stroke: #EE82EE;
 }
