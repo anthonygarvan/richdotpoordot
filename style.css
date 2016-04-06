@@ -1,28 +1,7 @@
-body {
-    background-color: #EEEEEE;
-    margin: 0px;
-}
-
-.display, .control {
-	margin: 10px;
-}
-
-.display {
-	float: left;
-}
-
-.control {
-	float: left;
-}
-
-.control textarea {
-	margin: 10px;
-}
 
 svg {
 	border: 1px solid black;
 }
-
 
 .black {
 	fill: #000000;
@@ -52,4 +31,12 @@ svg {
 	fill: #EE82EE;
 	stroke-width: 1px;
 	stroke: #EE82EE;
+}
+
+#start {
+  font-size: 1.4rem;
+  height: 4.5rem;
+  line-height: 4.5rem;
+  padding: 0 2rem;
+  margin: 10px;
 }

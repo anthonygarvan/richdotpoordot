@@ -3,14 +3,13 @@ $(function() {
   var gridSize = {x: 10, y: 10}
   var squareLength = (window.innerHeight-20) / gridSize.y;
   var maxIterations = 500;
-  var reproductionCoefficient = .05; // 0.05
+  var reproductionCoefficient = .05; // 0.05 - adjustable
+  var patronReturn = 0.5; // 0.3 - adjustable
   var mortalityCoefficient = .01; // 0.05
-  var defenseCost = .1; // 0.1
-  var mutationRate = 0.01; // 0.01
+  var defenseCost = .1;
+  var mutationRate = 0.01;
   var costOfLaborToClient = 0.2; // 0.2
-  var patronReturn = 0.6; // 0.3
   var clientCostForPatron = (patronReturn + costOfLaborToClient) / 2;
-
 
   function getSvgSize(gridSize, squareLength) {
     var width = gridSize.x * squareLength;
@@ -164,10 +163,10 @@ $(function() {
     })
     Array.prototype.push.apply(agents, newAgents);
     drawAgents(groups, scales);
+    year += 1;
     if(year >= maxIterations) {
       clearInterval(loop);
     }
-    year += 1;
     $('#year').text(year);
   }
 
@@ -194,12 +193,37 @@ $(function() {
   var groups = { path:svgContainer.append("g"),
                   position:svgContainer.append("g") };
 
-  var initialAgentsPerCell = 3;
-  var agents = [];
-  initializeAgents();
-  drawAgents(groups, scales);
+  var agents;
+  var year;
+  var loop;
 
-  year = 0;
-  var loop = setInterval(executeTimestep, 100);
-  
+  function startSimulation() {
+    agents = [];
+    initializeAgents();
+    drawAgents(groups, scales);
+
+    year = 0;
+    if(loop) {clearInterval(loop);}
+    loop = setInterval(executeTimestep, 80);    
+  }
+
+  $("#reproductionRate").slider({min: .01, max: 0.1, value: reproductionCoefficient, step: 0.005,
+                                  slide: function( event, ui ) {
+                                          $("#reproductionRateDisplay").html( ui.value );
+                                          reproductionCoefficient = $("#reproductionRate").slider("value");
+                                          }});
+
+  $("#profitability").slider({min: .1, max: 1, value: patronReturn, step: 0.05,
+                                  slide: function( event, ui ) {
+                                          $("#profitabilityDisplay").html( ui.value );
+                                          patronReturn = $("#profitability").slider("value");
+                                          }});
+
+  $("#start").click(function(event) {
+    event.preventDefault();
+    startSimulation();
+    $(this).blur();
+  });
+
+  startSimulation();
 });
