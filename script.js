@@ -72,6 +72,16 @@ $(function() {
              .attr("r", function (d) { return 2*Math.round(Math.sqrt(d.income)); });
   }
 
+  function takeTerritory(livingAgents, agent) {
+    var victims = livingAgents.filter(function(a) {
+          return (a.x === agent.x && a.y === agent.y) && a !== agent});
+    
+    victims.forEach(function(victim) {
+          victim.isDead = true;
+          map.grid[agent.x][agent.y].population -= 1;
+    });
+  }
+
   function executeTimestep() {
     var newAgents = []
 
@@ -91,9 +101,7 @@ $(function() {
     }
 
     livingAgents.forEach(function(agent) {
-      reproductionRate = agent.income * reproductionCoefficient;
       var cell = map.grid[agent.x][agent.y];
-      mortalityRate = mortalityCoefficient * (cell.productivity / agent.income) ;
 
       if(agent.type === 'dove') {
         agent.income = cell.productivity / cell.population;          
@@ -122,56 +130,53 @@ $(function() {
       if(Math.random() < mutationRate) {
           var types = ['dove', 'solo', 'client', 'patron'];
           var candidateType = types[Math.floor(types.length * Math.random())]
-          var isTerritorial = (agent.type === 'solo' || agent.type === 'patron');
-          if(isTerritorial) {
-            if((cell.productivity - cell.population) >= (1 + defenseCost)) {
-              agent.type = candidateType;
-              agent.isTerritorial = true;
-            }            
-          } else {
+          var isTerritorial = (candidateType === 'solo' || candidateType === 'patron');
+          var isValid = !isTerritorial || 
+                      (isTerritorial && ((cell.productivity - cell.population) >= (1 + defenseCost))) 
+          if(isValid) {
             agent.type = candidateType;
-            agent.isTerritorial = false;
+            agent.isTerritorial = isTerritorial;
+            
+            if(agent.isTerritorial) {
+              takeTerritory(livingAgents, agent);
+            }
           }
-
       } 
 
+      var reproductionRate = agent.income * reproductionCoefficient;
       if(Math.random() < reproductionRate) {
         var newAgent = JSON.parse(JSON.stringify(agent));
 
         var results;
         if(newAgent.isTerritorial) {
-           results = availableCells.filter(function(c) {
-            return (c.productivity - c.population) >= (1 + defenseCost)
+           results = map.cells.filter(function(c) {
+            return !cell.isDefended && ((c.productivity - c.population) >= (1 + defenseCost))
           });
         } else {
-          results = availableCells.filter(function(c) {
-            return (c.productivity - c.population) >= 1
+          results = map.cells.filter(function(c) {
+            return !cell.isDefended && ((c.productivity - c.population) >= 1)
           });
         }
 
         if(results.length > 0) {
-          newAgent.x = results[0].x;
-          newAgent.y = results[0].y;
-          results[0].isDefended = newAgent.isTerritorial;
-          results[0].population += 1;
+          var newCell = results[Math.floor(results.length*Math.random())]; 
+          newAgent.x = newCell.x;
+          newAgent.y = newCell.y;
+          newCell.isDefended = newAgent.isTerritorial;
+          newCell.population += 1;
           newAgents.push(newAgent);
-          availableCells.splice(availableCells.indexOf(results[0]), 1);
+          if(newAgent.isTerritorial) {
+            takeTerritory(livingAgents, newAgent);
+          }
         }
       }
 
-      if(Math.random() < mortalityRate || 
-        (cell.isDefended && !agent.isTerritorial ||
-        agent.income < 1)) {
+      var mortalityRate = mortalityCoefficient * (cell.productivity / agent.income);
+      if(Math.random() < mortalityRate) {
         agent.isDead = true;
         cell.population -= 1;
         if(cell.population == 0) {
           cell.isDefended = false;
-        }
-
-        if(!cell.isDefended && 
-            (cell.productivity - cell.population) >= 1 &&
-            availableCells.indexOf(cell) < 0) {
-          availableCells.push(cell);
         }
       }
     })
@@ -190,9 +195,6 @@ $(function() {
         agent.income = map.grid[agent.x][agent.y].productivity; 
         agents.push(agent);    
         cell.population = 1;  
-        if(cell.productivity > 1) {
-          availableCells.push(cell);
-        }    
     })
   }
 
@@ -213,11 +215,8 @@ $(function() {
   var agents;
   var year;
   var loop;
-  var availableCells;
-
   function startSimulation() {
     agents = [];
-    availableCells = [];
     initializeAgents();
     drawAgents(groups, scales);
 
@@ -236,6 +235,7 @@ $(function() {
                                   slide: function( event, ui ) {
                                           $("#profitabilityDisplay").html( ui.value );
                                           patronReturn = $("#profitability").slider("value");
+                                          clientCostForPatron = (patronReturn + costOfLaborToClient) / 2;
                                           }});
   $("#reproductionRateDisplay").text(reproductionCoefficient);
   $("#profitabilityDisplay").text(patronReturn);
