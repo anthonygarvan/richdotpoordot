@@ -10,74 +10,28 @@ $(function() {
   var mutationRate = 0.01; // 0.01
   var costOfLaborToClient = 0.2; // 0.2
   var clientCostForPatron = (patronReturn + costOfLaborToClient) / 2;
+  var agents = [];
+  var livingAgents = [];
+  var year;
+  var loop;
+  var chartMode = 'averageIncome';
+  var world;
+  var map;
+  var scales;
 
-  function getSvgSize(gridSize, squareLength) {
-    var width = gridSize.x * squareLength;
-    var height = gridSize.y * squareLength;
-    return { width: width, height: height };
-  }
+  /**********************************************
+  ************ Simulation Functions *************
+  **********************************************/
 
-  function buildMap(gridSize, ratios) {
-    var map = { grid:[], cells: [] };
-    for (x = 0; x < gridSize.x; x++) {
-        map.grid[x] = [];
-        for (y = 0; y < gridSize.y; y++) {
-            var cell = { x:x, y:y , 
-                        productivity: Math.ceil(max_productivity*Math.random()),
-                        population: 0};
-            map.grid[x][y] = cell;
-            map.cells.push(cell);
-        }
-    }
-    return map;
-  }
-
-  function getScale(gridSize, svgSize) {
-    var xScale = d3.scale.linear().domain([0,gridSize.x]).range([0,svgSize.width]);
-    var yScale = d3.scale.linear().domain([0,gridSize.y]).range([0,svgSize.height]);
-    return { x:xScale, y:yScale };
-  }
-
-  function drawCells(svgContainer, scales, data) {
-    var gridGroup = svgContainer.append("g");
-    var cells = gridGroup.selectAll("rect")
-                .data(data)
-                .enter()
-                .append("rect");
-    var cellAttributes = cells
-             .attr("x", function (d) { return scales.x(d.x); })
-             .attr("y", function (d) { return scales.y(d.y); })
-             .attr("width", function (d) { return squareLength; })
-             .attr("height", function (d) { return squareLength; })
-             .attr("fill", function(d) { return 'rgb(50,' + Math.round(30*d.productivity) + ',50)'});
-  }
-
-  function drawAgents(groups, scales) {
-    var circleData = groups.position.selectAll("circle").data(agents);
-    circleData.exit().remove();
-    circleData.enter().append("circle")
-             .attr("cx", function (d) { 
-                return scales.x(d.x + Math.random()); 
-              })
-             .attr("cy", function (d) { 
-                return scales.y(d.y + Math.random()); 
-              });
-    circleData
-             .attr("class", function(d) {
-                if(d.isDead) {return 'dead'}
-                else {return d.type}})
-             .attr("r", function (d) { return 2*Math.round(Math.sqrt(d.income)); });
-  }
-
-  function takeTerritory(agent) {
-    var victims = map.grid[agent.x][agent.y].agents.filter(function(a) {
-          return (!a.isDead && a !== agent)});
-    
-    victims.forEach(function(victim) {
-          victim.isDead = true;
-          map.grid[agent.x][agent.y].population -= 1;
-    });
-    map.grid[agent.x][agent.y].isDefended = true;
+  function initializeAgents() {
+    map.cells.forEach(function(cell) {
+        var agent = {x: cell.x, y: cell.y, type: 'dove'}
+        agent.income = map.grid[agent.x][agent.y].productivity; 
+        agents.push(agent); 
+        livingAgents.push(agent);
+        cell.agents = [agent];   
+        cell.population = 1;  
+    })
   }
 
   function executeTimestep() {
@@ -175,20 +129,8 @@ $(function() {
       }
     })
     Array.prototype.push.apply(agents, newAgents);
-    drawAgents(groups, scales);
-
-     var incomeCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
-     var headCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
-    livingAgents.forEach(function(agent) {
-      incomeCounts[agent.type] += agent.income; 
-      headCounts[agent.type] += 1;     
-    });
-
-    chartData = [];
-    ['dove', 'client', 'solo', 'patron'].forEach(function(type) {
-      chartData.push({type: type, income: incomeCounts[type], count: headCounts[type]})
-    })
-    drawChart(chartData);
+    drawChart();
+    drawAgents();
     year += 1;
     if(year >= maxIterations) {
       clearInterval(loop);
@@ -196,66 +138,101 @@ $(function() {
     $('#year').text(year);
   }
 
-  function initializeAgents() {
-    map.cells.forEach(function(cell) {
-        var agent = {x: cell.x, y: cell.y, type: 'dove'}
-        agent.income = map.grid[agent.x][agent.y].productivity; 
-        agents.push(agent); 
-        livingAgents.push(agent);
-        cell.agents = [agent];   
-        cell.population = 1;  
-    })
+  function takeTerritory(agent) {
+    var victims = map.grid[agent.x][agent.y].agents.filter(function(a) {
+          return (!a.isDead && a !== agent)});
+    
+    victims.forEach(function(victim) {
+          victim.isDead = true;
+          map.grid[agent.x][agent.y].population -= 1;
+    });
+    map.grid[agent.x][agent.y].isDefended = true;
   }
 
-  var svgSize = getSvgSize(gridSize, squareLength);
-  var map = buildMap(gridSize);
-
-  var svgContainer = d3.select(".display")
-                          .append("svg")
-                            .attr("width", svgSize.width)
-                            .attr("height", svgSize.height);
-  var scales = getScale(gridSize, svgSize);
-
-  drawCells(svgContainer, scales, map.cells);
-
-  var groups = { path:svgContainer.append("g"),
-                  position:svgContainer.append("g") };
-
-  var agents;
-  var livingAgents;
-  var year;
-  var loop;
   function startSimulation() {
     agents = [];
     livingAgents = [];
     initializeAgents();
-    drawAgents(groups, scales);
-
     year = 0;
     if(loop) {clearInterval(loop);}
     loop = setInterval(executeTimestep, 80);    
   }
 
-  $("#reproductionRate").slider({min: .01, max: 0.1, value: reproductionCoefficient, step: 0.005,
-                                  slide: function( event, ui ) {
-                                          $("#reproductionRateDisplay").html( ui.value );
-                                          reproductionCoefficient = $("#reproductionRate").slider("value");
-                                          }});
+  /**********************************************
+  ************** Graphics Functions *************
+  **********************************************/
 
-  $("#profitability").slider({min: 0, max: 1.2, value: patronReturn, step: 0.05,
-                                  slide: function( event, ui ) {
-                                          $("#profitabilityDisplay").html( ui.value );
-                                          patronReturn = $("#profitability").slider("value");
-                                          clientCostForPatron = (patronReturn + costOfLaborToClient) / 2;
-                                          }});
-  $("#reproductionRateDisplay").text(reproductionCoefficient);
-  $("#profitabilityDisplay").text(patronReturn);
+  function getSvgSize(gridSize, squareLength) {
+    var width = gridSize.x * squareLength;
+    var height = gridSize.y * squareLength;
+    return { width: width, height: height };
+  }
 
-  $("#start").click(function(event) {
-    event.preventDefault();
-    startSimulation();
-    $(this).blur();
-  });
+  function buildMap(gridSize, ratios) {
+    var map = { grid:[], cells: [] };
+    for (x = 0; x < gridSize.x; x++) {
+        map.grid[x] = [];
+        for (y = 0; y < gridSize.y; y++) {
+            var cell = { x:x, y:y , 
+                        productivity: Math.ceil(max_productivity*Math.random()),
+                        population: 0};
+            map.grid[x][y] = cell;
+            map.cells.push(cell);
+        }
+    }
+    return map;
+  }
+
+  function initializeGraphics() {
+    var svgSize = getSvgSize(gridSize, squareLength);
+    map = buildMap(gridSize);
+
+    var svgContainer = d3.select(".display")
+                            .append("svg")
+                              .attr("width", svgSize.width)
+                              .attr("height", svgSize.height);
+    scales = getScale(gridSize, svgSize);
+    world = svgContainer.append("g");
+
+    drawAgents();
+    drawCells(svgContainer);
+  }
+
+  function getScale(gridSize, svgSize) {
+    var xScale = d3.scale.linear().domain([0,gridSize.x]).range([0,svgSize.width]);
+    var yScale = d3.scale.linear().domain([0,gridSize.y]).range([0,svgSize.height]);
+    return { x:xScale, y:yScale };
+  }
+
+  function drawCells(svgContainer) {
+    var cells = world.selectAll("rect")
+                .data(map.cells)
+                .enter()
+                .append("rect");
+    var cellAttributes = cells
+             .attr("x", function (d) { return scales.x(d.x); })
+             .attr("y", function (d) { return scales.y(d.y); })
+             .attr("width", function (d) { return squareLength; })
+             .attr("height", function (d) { return squareLength; })
+             .attr("fill", function(d) { return 'rgb(50,' + Math.round(30*d.productivity) + ',50)'});
+  }
+
+  function drawAgents() {
+    var circleData = world.selectAll("circle").data(agents);
+    circleData.exit().remove();
+    circleData.enter().append("circle")
+             .attr("cx", function (d) { 
+                return scales.x(d.x + Math.random()); 
+              })
+             .attr("cy", function (d) { 
+                return scales.y(d.y + Math.random()); 
+              });
+    circleData
+             .attr("class", function(d) {
+                if(d.isDead) {return 'dead'}
+                else {return d.type}})
+             .attr("r", function (d) { return 2*Math.round(Math.sqrt(d.income)); });
+  }
 
   function initializeChart() {
     var width = window.innerHeight - 50;
@@ -271,8 +248,6 @@ $(function() {
     var chart = d3.select(".chart")
         .attr("width", width)
         .attr("height", chartHeight);
-
-      y.domain([0, 20]);
 
       var barWidth = width / data.length;
 
@@ -294,13 +269,88 @@ $(function() {
           .text(function(d) { return d.type; });
   }
 
-  function drawChart(data) {
-      d3.select(".chart").selectAll("rect").data(data)
-        .attr("height", function(d) { return chartHeight - y(d.income / d.count); })
-        .attr("y", function(d) { return y(d.income / d.count); })
-        .attr("class", function(d) {return d.type});
+  function drawChart() {
+      var incomeCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
+       var headCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
+      livingAgents.forEach(function(agent) {
+        incomeCounts[agent.type] += agent.income; 
+        headCounts[agent.type] += 1;     
+      });
+
+      var chartData = [];
+      ['dove', 'client', 'solo', 'patron'].forEach(function(type) {
+        chartData.push({type: type, income: incomeCounts[type], count: headCounts[type]})
+      })
+
+      if(chartMode === 'averageIncome') {
+        y.domain([0, 20]);
+        d3.select(".chart").selectAll("rect").data(chartData)
+          .attr("height", function(d) { if(d.count > 0) {return chartHeight - y(d.income / d.count); } else {return 0}})
+          .attr("y", function(d) {if(d.count > 0) { return y(d.income / d.count);} else {return 0; }})
+          .attr("class", function(d) {return d.type});
+      } else {
+        y.domain([0, 500]);
+        d3.select(".chart").selectAll("rect").data(chartData)
+          .attr("height", function(d) { return chartHeight - y(d.count); })
+          .attr("y", function(d) { return y(d.count); })
+          .attr("class", function(d) {return d.type});
+      }
   }
 
+  /**********************************************
+  ************** Binding to DOM *****************
+  **********************************************/
+
+  function bindEvents() {
+    $("#reproductionRate").slider({min: .01, max: 0.1, value: reproductionCoefficient, step: 0.005,
+                                    slide: function( event, ui ) {
+                                            $("#reproductionRateDisplay").html( ui.value );
+                                            reproductionCoefficient = $("#reproductionRate").slider("value");
+                                            }});
+
+    $("#profitability").slider({min: 0, max: 1.2, value: patronReturn, step: 0.05,
+                                    slide: function( event, ui ) {
+                                            $("#profitabilityDisplay").html( ui.value );
+                                            patronReturn = $("#profitability").slider("value");
+                                            clientCostForPatron = (patronReturn + costOfLaborToClient) / 2;
+                                            }});
+    $("#reproductionRateDisplay").text(reproductionCoefficient);
+    $("#profitabilityDisplay").text(patronReturn);
+
+    $("#start").click(function(event) {
+      event.preventDefault();
+      startSimulation();
+      $(this).blur();
+    });
+
+    $("#toTotalPopulation").click(function(event) {
+        chartMode = 'totalPopulation';
+        $('#averageIncome').hide();
+        $('#totalPopulation').show();
+        drawChart();
+    });
+
+    $("#toAverageIncome").click(function(event) {
+        chartMode = 'averageIncome';
+        $('#averageIncome').show();
+        $('#totalPopulation').hide();
+        drawChart();
+    });
+
+    $("#toRichDotPoorDot").click(function (){
+                  $('html, body').animate({
+                      scrollTop: $("#richdotpoordot").offset().top
+                  }, 1000);
+    });
+  }
+
+
+  /**********************************************
+  ************* Starting Everything *************
+  **********************************************/
+
+  bindEvents();
+  initializeGraphics();
   initializeChart();
   startSimulation();
 });
