@@ -64,11 +64,8 @@ $(function() {
               });
     circleData
              .attr("class", function(d) {
-                if(d.isDead) {return 'black'}
-                if(d.type === 'dove') {return 'blue'}
-                if(d.type === 'solo') {return 'red'}
-                if(d.type === 'client') {return 'yellow'}
-                if(d.type === 'patron') {return 'purple'}})
+                if(d.isDead) {return 'dead'}
+                else {return d.type}})
              .attr("r", function (d) { return 2*Math.round(Math.sqrt(d.income)); });
   }
 
@@ -184,6 +181,15 @@ $(function() {
       clearInterval(loop);
     }
     $('#year').text(year);
+
+    var incomeCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
+    livingAgents.forEach(function(agent) {
+      incomeCounts[agent.type] += agent.income;      
+    });
+    drawChart([{type: 'dove', income: incomeCounts['dove']}, 
+                {type: 'solo', income: incomeCounts['solo']},
+                {type: 'client', income: incomeCounts['client']}, 
+                {type: 'patron', income: incomeCounts['patron']}]);
   }
 
   function initializeAgents() {
@@ -232,7 +238,7 @@ $(function() {
                                           reproductionCoefficient = $("#reproductionRate").slider("value");
                                           }});
 
-  $("#profitability").slider({min: .1, max: 1.2, value: patronReturn, step: 0.05,
+  $("#profitability").slider({min: 0, max: 1.2, value: patronReturn, step: 0.05,
                                   slide: function( event, ui ) {
                                           $("#profitabilityDisplay").html( ui.value );
                                           patronReturn = $("#profitability").slider("value");
@@ -247,5 +253,49 @@ $(function() {
     $(this).blur();
   });
 
+  function initializeChart() {
+    var width = window.innerHeight - 50;
+    chartHeight = window.innerHeight - 370;
+    y = d3.scale.linear()
+        .range([chartHeight, 0]);
+    var data = [{type: 'dove', income: 0}, 
+                {type: 'solo', income: 0},
+                {type: 'client', income: 0}, 
+                {type: 'patron', income: 0}]
+    var chart = d3.select(".chart")
+        .attr("width", width)
+        .attr("height", chartHeight);
+
+      y.domain([0, 500]);
+
+      var barWidth = width / data.length;
+
+      var bar = chart.selectAll("g")
+                      .data(data)
+          bar.exit().remove();
+          bar.enter().append("g")
+          .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
+
+      bar.append("rect")
+          .attr("y", function(d) { return y(d.income); })
+          .attr("height", function(d) { return chartHeight - y(d.income); })
+          .attr("width", barWidth - 1)
+          .attr("opacity", "0.3")
+          .attr("class", function(d) {return d.type});
+
+      bar.append("text")
+          .attr("x", (barWidth / 2)-20)
+          .attr("y", chartHeight - 20)
+          .attr("dy", ".75em")
+          .text(function(d) { return d.type; });
+  }
+
+  function drawChart(data) {
+      d3.select(".chart").selectAll("rect").data(data)
+        .attr("height", function(d) { return chartHeight - y(d.income); })
+        .attr("y", function(d) { return y(d.income); })
+  }
+
+  initializeChart();
   startSimulation();
 });

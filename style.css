@@ -1,33 +1,28 @@
-
-svg {
-	border: 1px solid black;
-}
-
-.black {
+.dead {
 	fill: rgba(0,0,0,.2);
 	stroke-width: 1px;
 	stroke: rgba(0,0,0,.2);
 }
 
-.blue {
+.dove {
 	fill: #2973F2;
 	stroke-width: 1px;
 	stroke: #2973F2;	
 }
 
-.red {
+.solo {
 	fill: #FF0000;
 	stroke-width: 1px;
 	stroke: #FF0000;	
 }
 
-.yellow {
+.client {
 	fill: #ffff00;
 	stroke-width: 1px;
 	stroke: #ffff00;
 }
 
-.purple {
+.patron {
 	fill: #EE82EE;
 	stroke-width: 1px;
 	stroke: #EE82EE;
@@ -40,3 +35,8 @@ svg {
   padding: 0 2rem;
   margin: 8px;
 }
+
+.chart rect {
+    stroke-width: 1px;
+    stroke: gray;
+ }

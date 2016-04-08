@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Unfair Dots</title>
+        <title>Rich Dot, Poor Dot</title>
         <meta name="description" content="The emergence of inequality, backed by peer-reviewed research">
         <script src="http://d3js.org/d3.v3.min.js"></script>
         <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
@@ -33,17 +33,18 @@
             <div class="row">
                 <div class="column column-50">
                     <button id="start" class="button button-large float-right"><i class="fa fa-refresh"></i> Restart</button>
-                    <h2>Unfair Dot People</h2>
+                    <h2><a href="#richdotpoordot">Rich Dot, Poor Dot</a></h2>
                     <h5>Year: <span id="year"></span></h5>
-                            <p>
-                            <label for="reproductionRate" title="Dots breed proportional to their income and this number">Reproduction Rate: <span id="reproductionRateDisplay"></span></label>
-                            <div id="reproductionRate"></div>
-                            </p>
-                            <p>
-                            <label for="profitability" title="Patrons get this much in return for client services, profits are shared equally.">Trade Profitability: <span id="profitabilityDisplay"></span></label>
-                            <div id="profitability"></div>
-                            </p>
-                            
+                    <p>
+                    <label for="reproductionRate" title="Dots breed proportional to their income and this number">Reproduction Rate: <span id="reproductionRateDisplay"></span></label>
+                    <div id="reproductionRate"></div>
+                    </p>
+                    <p>
+                    <label for="profitability" title="Patrons get this much in return for client services, profits are shared equally.">Trade Profitability: <span id="profitabilityDisplay"></span></label>
+                    <div id="profitability"></div>
+                    </p>
+                    <h5>Total Income By Type</h5>
+                    <svg class="chart"></svg>
                 </div>
                 <div class="column column-50">
                     <div class="display">
@@ -52,7 +53,7 @@
             </div>
             <div class="row">
                 <div class="column">
-                    <h1>Unfair Dot People</h1>
+                    <h1 id="richdotpoordot">Rich Dot, Poor Dot</h1>
                     <h4>A simulation of the emergence of inequality</h4>
                     <blockquote>A big family has cultivated fruitful soil; two little families nearby have
                     thankless and rebellious fields. The two poor families have to serve the
@@ -64,20 +65,22 @@
                     </blockquote>
                     <p>─ Voltaire (from "Equality," Philosophical Dictionary, 1750)</p>
                     <h4>What it is</h4>
-                    <p>This is a web-based version of the simulation described in <a href="http://faculty.washington.edu/easmith/Smith&ChoiMs-May06.pdf">this</a> 2006 paper by anthropologist Eric Alden Smith and economist Jung-Kyoo Choi. The paper was the first to present a mathematical test of some of the theories about the emergence of inequality that philosophers, social scientists, and economists have been refining for centuries.</p>
+                    <p>This is a web-based version of the simulation described in <a href="http://faculty.washington.edu/easmith/Smith&ChoiMs-May06.pdf">this</a> 2006 paper by anthropologist Eric Alden Smith and economist Jung-Kyoo Choi. The paper was the first to present a rigorous simulation of a theory of inequality that philosophers, social scientists, and economists have been refining for centuries.</p>
 
-                    <p>The simulation creates a world of dot people born into patches with various amounts of resources (greener = richer). At first, all dot people simply share the resources with other dot people on their patch. These first dot people are called Doves. All dot people reproduce at a rate proportional to their income (you can set the rate of proportionality with the slider).</p>
+                    <p>The simulation creates a world of dot people born into patches with various amounts of resources (greener = richer). All dot people reproduce at a rate proportional to their income. A dot's income is displayed as the size of the dot, and you can set the rate of proportionality with the slider. There are different types of dot people: Doves, Solos, Clients and Patrons, who have different ways of getting income. </p> 
 
-                    <p>When a new dot person is born, there is some probability (I keep it at 10%) that the new dot baby will have a <em>different</em> survival strategy. It could become a Solo, which is a type that does not tolerate other dot people on its patch, and will pay a price to defend the patch. Once a Solo occupies a patch, it kills off the others and keeps it until it dies. Or it could become a Patron or Client. Patrons are territorial like Solo's, but they engage in trade with Clients, giving up some of their resources for labor from the Clients, as long as it profits them overall (you can play around with the Patron's revenue from the Client with the slider). Client's are like Dove's in that they are willing to share their patch, but they also engage in trade with their Patron. 
+                    <p>At first, all dot people are Doves. Doves simply share the resources with other dot people on their patch. When a new dot person is born, there is some probability (I keep it at 10%) that the new dot baby will have a different survival strategy. It could become a Solo, which is a type that does not tolerate other dot people on its patch, and will pay a price to defend the patch. Once a Solo occupies a patch, it kills off the others and keeps it until it dies. Or it could become a Patron or Client. Patrons are territorial like Solos, but they engage in trade with Clients, giving up some of their resources for labor from the Clients, as long as it profits them overall (you can play around with the Patron's revenue from the Client with the slider). Client's are like Dove's in that they are willing to share their patch, but they also engage in trade with their Patron. 
                     </p>
 
-                    <p>Every year, every dot reaps income from its patch, the Patrons and Clients engage in trade, and dot people are born and die according to their total income.</p>
+                    <p>Every year, every dot person reaps income from its patch, the Patrons and Clients engage in trade, and dot people are born and die according to their total income. It's a simple life, being a dot person.</p>
 
                     <h4>How it behaves</h4>
-                    <p>I encourage you to play with it yourself and see! But here's the gist: When trade is very profitable, Patrons and Clients generally dominate. When reproduction rates are high, doves are prevalent, since they breed quickly enough to dominate the resources before other strategies can take hold. When reproduction rates are lower, but trade is not very profitable, one of the two territorial strategies will dominate (Solo's or Patron's).</p>
+                    <p>I encourage you to play with it yourself and see! But here's the gist: When trade is very profitable, Patrons and Clients generally dominate. When reproduction rates are high, doves and clients are prevalent, since they breed quickly enough to dominate the resources before territorial strategies can take hold. When reproduction rates are lower, but trade is not very profitable, one of the two territorial strategies will dominate (Solos or Patrons).</p>
 
-                    <h4>Why it's important</h4>
-                    <p>Inequality is a fact of the world, today more than ever. Our complex economies produce feedback loops that are much more powerful than the ones described in the model, and build on themselves over centuries. That inequality doesn't tell us about who we are, it tells us who happened to land on a green patch.</p>
+                    <h4>So...</h4>
+                    <p>Although the world is more complicated than these dotted fields, the recipe for inequality can be simple: ownership, trade, and a splash of luck. Fair individuals can unwittingly create unfair systems. It's important as we search for solutions for inequality that we think systemicly, not personally. Think kindly on your richer and poorer neighbors: they are just little dots like you, but born into a different patch.</p>
+
+                    <p>Project by <a href="https://twitter.com/anthonygarvan">@anthonygarvan</a>.</p>
                 </div>       
             </div>
         </div>
