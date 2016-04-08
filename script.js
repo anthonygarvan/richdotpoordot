@@ -176,20 +176,24 @@ $(function() {
     })
     Array.prototype.push.apply(agents, newAgents);
     drawAgents(groups, scales);
+
+     var incomeCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
+     var headCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
+    livingAgents.forEach(function(agent) {
+      incomeCounts[agent.type] += agent.income; 
+      headCounts[agent.type] += 1;     
+    });
+
+    chartData = [];
+    ['dove', 'client', 'solo', 'patron'].forEach(function(type) {
+      chartData.push({type: type, income: incomeCounts[type], count: headCounts[type]})
+    })
+    drawChart(chartData);
     year += 1;
     if(year >= maxIterations) {
       clearInterval(loop);
     }
     $('#year').text(year);
-
-    var incomeCounts = {'dove': 0, 'solo': 0, 'client': 0, 'patron': 0};
-    livingAgents.forEach(function(agent) {
-      incomeCounts[agent.type] += agent.income;      
-    });
-    drawChart([{type: 'dove', income: incomeCounts['dove']}, 
-                {type: 'solo', income: incomeCounts['solo']},
-                {type: 'client', income: incomeCounts['client']}, 
-                {type: 'patron', income: incomeCounts['patron']}]);
   }
 
   function initializeAgents() {
@@ -258,15 +262,17 @@ $(function() {
     chartHeight = window.innerHeight - 370;
     y = d3.scale.linear()
         .range([chartHeight, 0]);
+        
     var data = [{type: 'dove', income: 0}, 
-                {type: 'solo', income: 0},
-                {type: 'client', income: 0}, 
+                {type: 'client', income: 0},
+                {type: 'solo', income: 0}, 
                 {type: 'patron', income: 0}]
+                
     var chart = d3.select(".chart")
         .attr("width", width)
         .attr("height", chartHeight);
 
-      y.domain([0, 500]);
+      y.domain([0, 20]);
 
       var barWidth = width / data.length;
 
@@ -277,8 +283,6 @@ $(function() {
           .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
 
       bar.append("rect")
-          .attr("y", function(d) { return y(d.income); })
-          .attr("height", function(d) { return chartHeight - y(d.income); })
           .attr("width", barWidth - 1)
           .attr("opacity", "0.3")
           .attr("class", function(d) {return d.type});
@@ -292,8 +296,9 @@ $(function() {
 
   function drawChart(data) {
       d3.select(".chart").selectAll("rect").data(data)
-        .attr("height", function(d) { return chartHeight - y(d.income); })
-        .attr("y", function(d) { return y(d.income); })
+        .attr("height", function(d) { return chartHeight - y(d.income / d.count); })
+        .attr("y", function(d) { return y(d.income / d.count); })
+        .attr("class", function(d) {return d.type});
   }
 
   initializeChart();
