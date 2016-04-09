@@ -336,6 +336,7 @@ $(function() {
     });
 
     $("#toTotalPopulation").click(function(event) {
+        event.preventDefault();
         chartMode = 'totalPopulation';
         $('#averageIncome').hide();
         $('#totalPopulation').show();
@@ -343,6 +344,7 @@ $(function() {
     });
 
     $("#toAverageIncome").click(function(event) {
+        event.preventDefault();
         chartMode = 'averageIncome';
         $('#averageIncome').show();
         $('#totalPopulation').hide();
