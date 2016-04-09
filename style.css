@@ -28,6 +28,22 @@
 	stroke: #EE82EE;
 }
 
+.dove-text {
+	background-color: rgba(41,115,252,0.2);
+}
+
+.solo-text {
+	background-color: rgba(255,0,0,0.2);
+}
+
+.client-text {
+	background-color: rgba(255,255,0,0.7);
+}
+
+.patron-text {
+	background-color: rgba(238,130,238,0.2);	
+}
+
 #start {
   font-size: 1.4rem;
   height: 4.5rem;
