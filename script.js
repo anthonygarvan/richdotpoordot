@@ -1,7 +1,13 @@
 $(function() {
   var max_productivity = 5;
   var gridSize = {x: 10, y: 10}
-  var squareLength = window.outerWidth / (2.3*gridSize.x);
+
+  var squareLength;
+  if(window.outerWidth > 640) {
+   squareLength = window.outerWidth / (2.3*gridSize.x);
+  } else {
+    squareLength = window.outerWidth / (1.15*gridSize.x);
+  }
 
   var maxIterations = 500;
   var reproductionCoefficient = .05; // 0.05 - adjustable
@@ -236,7 +242,12 @@ $(function() {
   }
 
   function initializeChart() {
-    var width = window.outerWidth/2.3;
+    var width
+    if(window.outerWidth > 640) {
+      width = window.outerWidth/2.3;
+    } else {
+      width = window.outerWidth/1.15;
+    }
     chartHeight = 160;
     y = d3.scale.linear()
         .range([chartHeight, 0]);
