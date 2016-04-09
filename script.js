@@ -1,7 +1,8 @@
 $(function() {
   var max_productivity = 5;
   var gridSize = {x: 10, y: 10}
-  var squareLength = window.innerHeight / gridSize.y;
+  var squareLength = window.outerWidth / (2.3*gridSize.x);
+
   var maxIterations = 500;
   var reproductionCoefficient = .05; // 0.05 - adjustable
   var patronReturn = 0.8; // 0.3 - adjustable
@@ -235,8 +236,8 @@ $(function() {
   }
 
   function initializeChart() {
-    var width = window.innerHeight - 50;
-    chartHeight = window.innerHeight - 370;
+    var width = window.outerWidth/2.3;
+    chartHeight = 160;
     y = d3.scale.linear()
         .range([chartHeight, 0]);
         
