@@ -1,7 +1,7 @@
 # Rich Dot, Poor Dot
 ## A simulation of the emergence of inequality.
 
-This is a simulation which demonstrates the emergence of systematic inequality from an egalitarian society, given initial disparities in resources and the creation of ownership and trade. It is a live, public, open source version of the model described in [The Emergence of Inequality in Small-Scale Societies: Simple Scenarios and Agent-Based Simulations](http://faculty.washington.edu/easmith/Smith&ChoiMs-May06.pdf).
+This is a simulation which demonstrates the emergence of systematic inequality from an egalitarian society, given initial disparities in resources and the discovery of ownership and trade. It is a live, public, open source version of the model described in [The Emergence of Inequality in Small-Scale Societies: Simple Scenarios and Agent-Based Simulations](http://faculty.washington.edu/easmith/Smith&ChoiMs-May06.pdf).
 
 The simulation depicts a world of randomly distributed resources (greener = richer) spread across a 10x10 map. At first, one dot is placed in each square. Every year there is some probability that they reproduce, die, or change survival strategies. A dot's reproduction rate is proportional to it's income, and mortality rate is inversely proportional to its income.
 

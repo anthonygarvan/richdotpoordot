@@ -259,7 +259,12 @@ $(function() {
                 
     var chart = d3.select(".chart")
         .attr("width", width)
-        .attr("height", chartHeight);
+        .attr("height", chartHeight)
+
+      chart.append("text")
+            .attr('x', 20)
+            .attr('y', 20)
+            .attr('id', 'hoverText');
 
       var barWidth = width / data.length;
 
@@ -269,16 +274,20 @@ $(function() {
           bar.enter().append("g")
           .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
 
+
       bar.append("rect")
           .attr("width", barWidth - 1)
           .attr("opacity", "0.3")
-          .attr("class", function(d) {return d.type});
+          .attr("class", function(d) {return d.type})
 
+
+          
       bar.append("text")
-          .attr("x", (barWidth / 2)-20)
+          .attr("x", barWidth/2 - 20)
           .attr("y", chartHeight - 20)
           .attr("dy", ".75em")
-          .text(function(d) { return d.type; });
+          .attr("type", function(d) {return d.type})
+          .text(function(d) {return d.type})
   }
 
   function drawChart() {
@@ -307,6 +316,22 @@ $(function() {
           .attr("y", function(d) { return y(d.count); })
           .attr("class", function(d) {return d.type});
       }
+
+      d3.selectAll('.dove')
+          .on("mouseover", function(d) {d3.select('#hoverText').text("Doves share and don't trade");})
+          .on("mouseout", function(d) {d3.select('#hoverText').text('');});
+
+       d3.selectAll('.client')
+          .on("mouseover", function(d) {d3.select('#hoverText').text("Clients share and trade");})
+          .on("mouseout", function(d) {d3.select('#hoverText').text('');});
+
+       d3.selectAll('.solo')
+          .on("mouseover", function(d) {d3.select('#hoverText').text("Solos defend and don't trade");})
+          .on("mouseout", function(d) {d3.select('#hoverText').text('');});
+
+       d3.selectAll('.patron')
+          .on("mouseover", function(d) {d3.select('#hoverText').text("Patrons defend and trade");})
+          .on("mouseout", function(d) {d3.select('#hoverText').text('');});
   }
 
   /**********************************************
